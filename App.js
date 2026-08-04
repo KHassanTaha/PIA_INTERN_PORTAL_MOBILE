@@ -15,9 +15,11 @@ import RootNavigator from './src/navigation/RootNavigator';
 import { persistor, store } from './src/store/store';
 import { piaTheme } from './src/theme/theme';
 import { useSyncQueue } from './src/services/syncQueue';
+import { useNotificationPolling } from './src/hooks/UseNotificationPolling';
 
 function AppShell() {
   useSyncQueue(); // starts the offline write-then-sync engine
+  useNotificationPolling();
   return <RootNavigator />;
 }
 
