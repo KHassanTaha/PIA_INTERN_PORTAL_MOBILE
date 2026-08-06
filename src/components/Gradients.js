@@ -13,7 +13,7 @@
 
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Appbar, Text, TouchableRipple } from 'react-native-paper';
+import { ActivityIndicator, Appbar, Text, TouchableRipple } from 'react-native-paper';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -53,13 +53,31 @@ export function IconBadge({ icon, tint, color }) {
  * for the fill, TouchableRipple for press feedback, Paper-consistent
  * type/spacing. `disabled` swaps to PIAGradients.disabled automatically -
  * never pass a raw color for the disabled state at the call site.
+ *
+ * FIXES applied here (previously): explicit rippleColor - the default
+ * ripple was too close to the gradient's own colors to read as visible
+ * feedback on press, which is why buttons across the app felt
+ * unresponsive even though onPress was firing correctly. `loading` prop
+ * added for the same reason - a picker/network action with no visual
+ * change while it's in flight (e.g. the camera opening) reads as "did
+ * nothing happened" even when it's working.
+ *
+ * NOTE: this component no longer applies its own marginTop - it
+ * previously baked in a 14px top margin unconditionally, which is
+ * exactly why two buttons placed side-by-side in a row (one
+ * GradientButton, one plain button) misaligned vertically: only one of
+ * them had the invisible offset. Spacing is now the CALLER's
+ * responsibility (wrap in a View with the margin you want) - if you're
+ * placing this next to another button, give both the same explicit
+ * layout instead of relying on this component's internal margin.
  */
-export function GradientButton({ icon, label, gradient, onPress, disabled }) {
+export function GradientButton({ icon, label, gradient, onPress, disabled, loading }) {
   return (
     <TouchableRipple
-      onPress={disabled ? undefined : onPress}
-      disabled={disabled}
+      onPress={disabled || loading ? undefined : onPress}
+      disabled={disabled || loading}
       borderless
+      rippleColor={PIAColors.white + '55'}
       style={styles.buttonWrapper}
     >
       <LinearGradient
@@ -68,12 +86,16 @@ export function GradientButton({ icon, label, gradient, onPress, disabled }) {
         end={{ x: 1, y: 0 }}
         style={styles.button}
       >
-        <Icon
-          name={icon}
-          size={18}
-          color={disabled ? PIAColors.ink + '55' : PIAColors.white}
-          style={styles.buttonIcon}
-        />
+        {loading ? (
+          <ActivityIndicator size={16} color={PIAColors.white} style={styles.buttonIcon} />
+        ) : (
+          <Icon
+            name={icon}
+            size={18}
+            color={disabled ? PIAColors.ink + '55' : PIAColors.white}
+            style={styles.buttonIcon}
+          />
+        )}
         <Text style={[styles.buttonLabel, disabled && styles.buttonLabelDisabled]}>
           {label}
         </Text>
@@ -117,7 +139,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonWrapper: { marginTop: 14, borderRadius: 14, overflow: 'hidden' },
+  buttonWrapper: { borderRadius: 14, overflow: 'hidden' },
   button: {
     flexDirection: 'row',
     alignItems: 'center',

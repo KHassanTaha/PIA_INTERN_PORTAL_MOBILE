@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Appbar, Text } from 'react-native-paper';
+import { Appbar, Text, TouchableRipple } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 
 import { GradientAccentBar, GradientButton, GradientHeader, IconBadge } from '../../components/Gradients';
+import ScreenBackground from '../../components/ScreenBackground';
 import StatusChip from '../../components/StatusChip';
 import IssuedDocumentModal from '../../components/documents/IssuedDocumentModal';
 import { DocumentStatus, RequestDocumentType, REQUEST_TYPE_META } from '../../constants/documentTypes';
@@ -48,7 +49,6 @@ function RequestTypeCard({ type }) {
     .filter((r) => r.type === type)
     .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))[0];
 
-  const isActive = record && (record.status === DocumentStatus.PENDING || record.status === DocumentStatus.IN_REVIEW);
   const isSubmitting = actionStatus === 'loading';
 
   const handleRequest = () => dispatch(submitRequestThunk(type));
@@ -106,11 +106,15 @@ function RequestTypeCard({ type }) {
               </View>
             )}
 
-            {record.status === DocumentStatus.PENDING && (
+            {(record.status === DocumentStatus.PENDING || record.status === DocumentStatus.IN_REVIEW) && (
               <View style={styles.withdrawRow}>
-                <Text onPress={handleWithdraw} style={styles.withdrawText}>
-                  Withdraw request
-                </Text>
+                <TouchableRipple
+                  onPress={handleWithdraw}
+                  rippleColor={PIAColors.error + '22'}
+                  style={styles.withdrawTouchable}
+                >
+                  <Text style={styles.withdrawText}>Withdraw request</Text>
+                </TouchableRipple>
               </View>
             )}
 
@@ -121,6 +125,7 @@ function RequestTypeCard({ type }) {
                   label={isSubmitting ? 'Submitting…' : 'Request Again'}
                   gradient={ACCENTS[type]}
                   disabled={isSubmitting}
+                  loading={isSubmitting}
                   onPress={handleRequest}
                 />
               </View>
@@ -129,13 +134,16 @@ function RequestTypeCard({ type }) {
         ) : (
           <>
             {actionError ? <Text style={styles.errorText}>{actionError}</Text> : null}
-            <GradientButton
-              icon={typeMeta.icon}
-              label={isSubmitting ? 'Requesting…' : `Request ${typeMeta.label}`}
-              gradient={ACCENTS[type]}
-              disabled={isSubmitting}
-              onPress={handleRequest}
-            />
+            <View style={styles.actionRow}>
+              <GradientButton
+                icon={typeMeta.icon}
+                label={isSubmitting ? 'Requesting…' : `Request ${typeMeta.label}`}
+                gradient={ACCENTS[type]}
+                disabled={isSubmitting}
+                loading={isSubmitting}
+                onPress={handleRequest}
+              />
+            </View>
           </>
         )}
       </View>
@@ -161,7 +169,7 @@ export default function RequestDocumentsScreen() {
   }, [dispatch]);
 
   return (
-    <View style={styles.container}>
+    <ScreenBackground>
       <GradientHeader gradient={PIAGradients.primaryDark}>
         <Appbar.BackAction color={PIAColors.white} onPress={() => navigation.goBack()} />
         <Appbar.Content title="Request Documents" titleStyle={styles.headerTitle} />
@@ -172,12 +180,11 @@ export default function RequestDocumentsScreen() {
           <RequestTypeCard key={type} type={type} />
         ))}
       </ScrollView>
-    </View>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: PIAColors.offWhite },
   headerTitle: { color: PIAColors.white, fontWeight: '700' },
   content: { padding: 16, paddingBottom: 32 },
 
@@ -200,5 +207,6 @@ const styles = StyleSheet.create({
 
   actionRow: { marginTop: 10 },
   withdrawRow: { marginTop: 10 },
+  withdrawTouchable: { alignSelf: 'flex-start', paddingVertical: 4, paddingHorizontal: 2, borderRadius: 6 },
   withdrawText: { color: PIAColors.error, fontSize: 12, fontWeight: '600' },
 });

@@ -2,30 +2,30 @@
  * components/documents/IssuedDocumentModal.js
  *
  * Full-screen modal for viewing/downloading an approved request's
- * generated file (ID card, gate pass, letter of internship).
+ * generated file (ID card, gate pass, letter of internship) and for
+ * viewing an intern's own uploaded documents.
  *
- * SCOPE NOTE, deliberately not silently expanded: this does NOT render
- * an actual in-app PDF preview - there's no PDF-rendering dependency in
- * the project (react-native-pdf or react-native-webview would both work,
- * neither is installed). Given how many native dependencies this project
- * has already picked up this session, I didn't want to add a fourth
- * without you weighing in. Right now this shows a file icon + name/size
- * and focuses on a REAL, working Download action (via react-native-fs,
- * already installed) - the person gets the actual file on their device
- * either way, just not a preview-before-downloading. Say the word if you
- * want a real in-app preview added and I'll wire up one of those two
- * libraries.
+ * UPDATE: now renders a REAL preview before downloading, not just a
+ * file icon. Images already had this (FilePreview renders an actual
+ * <Image>) - PDFs previously fell back to an icon+name only. Added
+ * react-native-pdf (+ its required peer, react-native-blob-util) to
+ * render PDFs inline, confirmed to support base64 data: URIs directly
+ * (our mock issued documents are exactly that) via source={{ uri }}.
  */
 
 import React, { useState } from 'react';
-import { Linking, Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { Modal, Portal, Snackbar, Text } from 'react-native-paper';
 import RNFS from 'react-native-fs';
+import Pdf from 'react-native-pdf';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { GradientButton } from '../Gradients';
 import FilePreview from './FilePreview';
 import { PIAColors, PIAGradients } from '../../theme/theme';
+
+const isPdf = (mimeType) => mimeType === 'application/pdf';
+const isImage = (mimeType) => mimeType?.startsWith('image/');
 
 async function saveDataUriToDevice(dataUri, fileName) {
   const match = dataUri.match(/^data:(.+);base64,(.+)$/);
@@ -49,8 +49,9 @@ async function saveDataUriToDevice(dataUri, fileName) {
  * }} props
  */
 export default function IssuedDocumentModal({ visible, onDismiss, documentLabel, file, loading, error }) {
-  const [downloadState, setDownloadState] = useState('idle'); // 'idle' | 'downloading' | 'done' | 'failed'
+  const [downloadState, setDownloadState] = useState('idle');
   const [snackbarMessage, setSnackbarMessage] = useState(null);
+  const [pdfError, setPdfError] = useState(null);
 
   const handleDownload = async () => {
     if (!file) return;
@@ -77,11 +78,7 @@ export default function IssuedDocumentModal({ visible, onDismiss, documentLabel,
 
   return (
     <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={styles.modalContainer}
-      >
+      <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={styles.modalContainer}>
         <View style={styles.header}>
           <Text variant="titleMedium" style={styles.title}>
             {documentLabel}
@@ -100,12 +97,22 @@ export default function IssuedDocumentModal({ visible, onDismiss, documentLabel,
         ) : file ? (
           <>
             <View style={styles.previewArea}>
-              <FilePreview
-                fileUri={file.uri}
-                fileName={file.name}
-                fileMimeType={file.mimeType}
-                size="large"
-              />
+              {isPdf(file.mimeType) ? (
+                pdfError ? (
+                  <FilePreview fileUri={file.uri} fileName={file.name} fileMimeType={file.mimeType} size="large" />
+                ) : (
+                  <Pdf
+                    source={{ uri: file.uri }}
+                    style={styles.pdfPreview}
+                    onError={(err) => setPdfError(err?.message || 'Could not preview this PDF.')}
+                    renderActivityIndicator={() => <Text style={styles.mutedText}>Loading preview…</Text>}
+                  />
+                )
+              ) : isImage(file.mimeType) ? (
+                <FilePreview fileUri={file.uri} fileName={file.name} fileMimeType={file.mimeType} size="large" />
+              ) : (
+                <FilePreview fileUri={file.uri} fileName={file.name} fileMimeType={file.mimeType} size="large" />
+              )}
             </View>
 
             <GradientButton
@@ -119,6 +126,7 @@ export default function IssuedDocumentModal({ visible, onDismiss, documentLabel,
               }
               gradient={PIAGradients.primary}
               disabled={downloadState === 'downloading'}
+              loading={downloadState === 'downloading'}
               onPress={handleDownload}
             />
           </>
@@ -145,4 +153,5 @@ const styles = StyleSheet.create({
   mutedText: { opacity: 0.6 },
   errorText: { color: PIAColors.error, textAlign: 'center', marginTop: 12 },
   previewArea: { alignItems: 'center', marginBottom: 20 },
+  pdfPreview: { width: '100%', height: 360, borderRadius: 12, backgroundColor: PIAColors.ink + '0D' },
 });

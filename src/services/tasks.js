@@ -1,49 +1,37 @@
 /**
  * services/tasks.js
  *
- * STUB — no /tasks endpoints exist on the backend yet. The live DB does
- * have a `tasks` table (assigned_to, assigned_by, priority, completed_at
- * per the confirmed schema), but it has no stage/status column matching
- * the ASSIGNED/STARTED/TESTING/REVIEW/SUBMITTED workflow this UI expects
- * - that's a schema addition someone on backend needs to make (a
- * `stage varchar` column + CHECK constraint, mirroring the pattern used
- * for LeaveRequests/DocumentRequests status columns elsewhere) before
- * this can be wired to something real.
+ * Mock-backed now (previously threw not-implemented) - same reasoning as
+ * documents.js/staffData.js: gives the Tasks screen real, interactive
+ * data to demo against without a backend. See mockTasksStore.js for the
+ * underlying data.
+ *
+ * TODO(backend-integration): replace both functions once GET /tasks/mine
+ * and PATCH /tasks/:id/stage exist. See leave.controller.js/
+ * document.controller.js for the authorization-check pattern the real
+ * PATCH endpoint should follow (an intern updates their own task's stage
+ * directly - no reviewer check needed, unlike leave/document decisions).
  */
 
-/**
- * @typedef {Object} Task
- * @property {string} id
- * @property {string} title
- * @property {string} description
- * @property {'Low'|'Medium'|'High'} priority
- * @property {string} stage - one of constants/taskStages.js's TaskStage values
- * @property {string|null} dueDate - ISO date string
- * @property {string} assignedByName
- * @property {string} createdAt - ISO datetime string
- */
+import { mockTasks } from './mockTasksStore';
 
-/**
- * TODO(backend-integration): implement once GET /tasks/mine (or
- * equivalent) exists.
- * @returns {Promise<Task[]>}
- */
+const MOCK_DELAY_MS = 500;
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** @returns {Promise<import('../constants/taskStages').Task[]>} */
 export async function getMyTasks() {
-  throw new Error('tasks.getMyTasks() is not implemented — no /tasks endpoint exists yet.');
+  await delay(MOCK_DELAY_MS);
+  return [...mockTasks];
 }
 
 /**
- * TODO(backend-integration): implement once PATCH /tasks/:id/stage (or
- * equivalent) exists. Should be a straightforward single-column update
- * server-side, similar in shape to the LeaveRequests/DocumentRequests
- * decision endpoints, just without the reviewer-authorization check
- * those have (an intern updates their own task's stage directly, no
- * approval step for stage changes themselves).
- *
  * @param {string} taskId
- * @param {string} newStage - a constants/taskStages.js TaskStage value
- * @returns {Promise<Task>}
+ * @param {string} newStage - a TaskStage value
  */
 export async function updateTaskStage(taskId, newStage) {
-  throw new Error('tasks.updateTaskStage() is not implemented — no /tasks endpoint exists yet.');
+  await delay(MOCK_DELAY_MS);
+  const task = mockTasks.find((t) => t.id === taskId);
+  if (!task) throw new Error('Task not found.');
+  task.stage = newStage;
+  return task;
 }

@@ -1,18 +1,27 @@
 /**
  * components/AppDrawerContent.js
  *
- * Shared custom drawer content for BOTH InternDrawer and StaffDrawer -
- * standard nav items on top (via Paper's default DrawerItemList,
- * preserving each Drawer.Screen's own icon/label/active-state styling),
- * a divider, then a gradient Logout button pinned at the bottom. Kept in
- * one file so intern and staff drawers can't drift into two different
- * logout implementations.
+ * Shared custom drawer content for BOTH InternDrawer and StaffDrawer.
+ *
+ * CHANGES this update:
+ *   - Logout now requires confirmation (Dialog) before dispatching
+ *     logoutThunk - previously it fired immediately on tap, which is
+ *     what was read as "doesn't do anything" (it worked, but with zero
+ *     visible feedback/ceremony for a destructive action, it can feel
+ *     like a no-op even when it isn't).
+ *   - Added top padding above the item list and vertical spacing between
+ *     items (via drawerItemStyle in each Drawer.Navigator's
+ *     screenOptions - see InternDrawer.js/StaffDrawer.js).
+ *   - ComingSoonDrawerLabel exported for use on any Drawer.Screen whose
+ *     component is still a placeholder, so the drawer visually
+ *     distinguishes working pages from under-construction ones instead
+ *     of presenting them identically.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
-import { Text, TouchableRipple } from 'react-native-paper';
+import { Button, Dialog, Portal, Text, TouchableRipple } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -20,11 +29,32 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { logoutThunk, selectCurrentUser } from '../store/slices/authSlice';
 import { PIAColors, PIAGradients } from '../theme/theme';
 
+/**
+ * Drop into any Drawer.Screen's options as:
+ *   options={{ drawerLabel: (props) => <ComingSoonDrawerLabel {...props} label="Profile" /> }}
+ */
+export function ComingSoonDrawerLabel({ label, color }) {
+  return (
+    <View style={labelStyles.row}>
+      <Text style={[labelStyles.label, { color }]}>{label}</Text>
+      <View style={labelStyles.badge}>
+        <Text style={labelStyles.badgeText}>Soon</Text>
+      </View>
+    </View>
+  );
+}
+
 export default function AppDrawerContent(props) {
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
+  const [confirmVisible, setConfirmVisible] = useState(false);
 
   const displayName = user ? `${user.first_name ?? ''} ${user.last_name ?? ''}`.trim() : '';
+
+  const handleConfirmLogout = () => {
+    setConfirmVisible(false);
+    dispatch(logoutThunk());
+  };
 
   return (
     <View style={styles.flexFill}>
@@ -40,13 +70,15 @@ export default function AppDrawerContent(props) {
           </View>
         ) : null}
 
+        <View style={styles.topSpacer} />
         <DrawerItemList {...props} />
       </DrawerContentScrollView>
 
       <View style={styles.footer}>
         <TouchableRipple
-          onPress={() => dispatch(logoutThunk())}
+          onPress={() => setConfirmVisible(true)}
           borderless
+          rippleColor={PIAColors.white + '55'}
           style={styles.logoutWrapper}
         >
           <LinearGradient
@@ -60,6 +92,21 @@ export default function AppDrawerContent(props) {
           </LinearGradient>
         </TouchableRipple>
       </View>
+
+      <Portal>
+        <Dialog visible={confirmVisible} onDismiss={() => setConfirmVisible(false)}>
+          <Dialog.Title>Log out?</Dialog.Title>
+          <Dialog.Content>
+            <Text>You'll need to sign in again to access your account.</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setConfirmVisible(false)}>Cancel</Button>
+            <Button onPress={handleConfirmLogout} textColor={PIAColors.error}>
+              Log Out
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </View>
   );
 }
@@ -67,6 +114,7 @@ export default function AppDrawerContent(props) {
 const styles = StyleSheet.create({
   flexFill: { flex: 1 },
   scrollContent: { paddingTop: 0 },
+  topSpacer: { height: 12 },
 
   profileBlock: {
     flexDirection: 'row',
@@ -102,4 +150,17 @@ const styles = StyleSheet.create({
   },
   logoutIcon: { marginRight: 8 },
   logoutLabel: { color: PIAColors.white, fontWeight: '700', fontSize: 15 },
+});
+
+const labelStyles = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  label: { fontSize: 14, flex: 1 },
+  badge: {
+    backgroundColor: PIAColors.gold + '26',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginLeft: 6,
+  },
+  badgeText: { fontSize: 9, fontWeight: '700', color: PIAColors.gold },
 });

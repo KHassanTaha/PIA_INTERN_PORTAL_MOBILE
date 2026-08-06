@@ -110,6 +110,29 @@ export async function amendUpload(uploadId, file) {
 }
 
 /**
+ * Withdraw an upload - allowed while Pending OR InReview (per feedback:
+ * an intern should be able to cancel a submission even after a reviewer
+ * has started looking at it, not just before).
+ *
+ * TODO(backend-integration): implement once DELETE
+ * /documents/uploads/:id (or a status transition to a Withdrawn state)
+ * exists.
+ *
+ * @param {string} uploadId
+ */
+export async function withdrawUpload(uploadId) {
+  await delay(MOCK_DELAY_MS);
+
+  const index = mockUploads.findIndex((u) => u.id === uploadId);
+  if (index === -1) throw new Error('Upload not found.');
+  const status = mockUploads[index].status;
+  if (status !== DocumentStatus.PENDING && status !== DocumentStatus.IN_REVIEW) {
+    throw new Error('This document has already been decided and cannot be withdrawn.');
+  }
+  mockUploads.splice(index, 1);
+}
+
+/**
  * TODO(backend-integration): implement once POST /documents/requests
  * exists. Same one-pending-per-type rule as submitUpload().
  *
@@ -139,8 +162,8 @@ export async function submitRequest(type) {
 }
 
 /**
- * Withdraw a request - only allowed while Pending (not yet InReview,
- * since a reviewer may already be actively looking at it by then).
+ * Withdraw a request - allowed while Pending OR InReview (per feedback:
+ * previously restricted to Pending only).
  *
  * TODO(backend-integration): implement once DELETE /documents/requests/:id
  * (or a status transition to a Withdrawn state) exists.
@@ -152,8 +175,9 @@ export async function withdrawRequest(requestId) {
 
   const index = mockRequests.findIndex((r) => r.id === requestId);
   if (index === -1) throw new Error('Request not found.');
-  if (mockRequests[index].status !== DocumentStatus.PENDING) {
-    throw new Error('Only a request that is still Pending can be withdrawn.');
+  const status = mockRequests[index].status;
+  if (status !== DocumentStatus.PENDING && status !== DocumentStatus.IN_REVIEW) {
+    throw new Error('This request has already been decided and cannot be withdrawn.');
   }
   mockRequests.splice(index, 1);
 }

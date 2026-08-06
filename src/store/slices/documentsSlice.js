@@ -19,6 +19,7 @@ import {
   submitRequest as submitRequestApi,
   submitUpload as submitUploadApi,
   withdrawRequest as withdrawRequestApi,
+  withdrawUpload as withdrawUploadApi,
 } from '../../services/documents';
 
 export const fetchMyDocumentsThunk = createAsyncThunk(
@@ -74,6 +75,18 @@ export const withdrawRequestThunk = createAsyncThunk(
       return requestId;
     } catch (err) {
       return rejectWithValue(err.message || 'Could not withdraw request');
+    }
+  },
+);
+
+export const withdrawUploadThunk = createAsyncThunk(
+  'documents/withdrawUpload',
+  async (uploadId, { rejectWithValue }) => {
+    try {
+      await withdrawUploadApi(uploadId);
+      return uploadId;
+    } catch (err) {
+      return rejectWithValue(err.message || 'Could not withdraw document');
     }
   },
 );
@@ -164,6 +177,10 @@ const documentsSlice = createSlice({
 
       .addCase(withdrawRequestThunk.fulfilled, (state, action) => {
         state.requests = state.requests.filter((r) => r.id !== action.payload);
+      })
+
+      .addCase(withdrawUploadThunk.fulfilled, (state, action) => {
+        state.uploads = state.uploads.filter((u) => u.id !== action.payload);
       })
 
       .addCase(fetchIssuedDocumentThunk.fulfilled, () => {
