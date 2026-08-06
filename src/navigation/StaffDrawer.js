@@ -4,35 +4,26 @@ import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import AppDrawerContent from '../components/AppDrawerContent';
+import DocumentApprovalsStack from './DocumentApprovalsStack';
+import InternsScreen from '../screens/staff/InternsScreen';
+import TeamAttendanceScreen from '../screens/staff/TeamAttendanceScreen';
+import TasksOverviewScreen from '../screens/staff/TasksOverviewScreen';
+import SignaturesScreen from '../screens/staff/SignaturesScreen';
+import AuditLogsScreen from '../screens/staff/AuditLogsScreen';
+import { ProfileScreen } from '../screens/staff/StaffPlaceholderScreens';
 import { selectUserRole } from '../store/slices/authSlice';
 import { piaTheme } from '../theme/theme';
-import {
-  ApprovalsScreen,
-  TeamAttendanceScreen,
-  TasksScreen,
-  InternsScreen,
-  GatePassesScreen,
-  LettersScreen,
-  SignaturesScreen,
-  ProfileScreen,
-} from '../screens/staff/StaffPlaceholderScreens';
 
 const Drawer = createDrawerNavigator();
 
 /**
- * Staff-role drawer (role 'admin' or 'employees' - i.e. any tier of
- * mentor/manager up through GM, plus admin). Every screen here is
- * currently a ComingSoonScreen placeholder (see
- * screens/staff/StaffPlaceholderScreens.js) except for navigation itself
- * being real - swap each Drawer.Screen's component for a real stack as
- * each feature gets built, without needing to touch this file's
- * structure.
+ * Staff-role drawer. As of this update, every item except Profile is a
+ * real DataTable-backed screen (mock data, see services/staffData.js) -
+ * Profile remains a placeholder pending the spec handed to the other
+ * agent (staff profile + GM signature upload flow).
  *
- * "Signature Requests" is admin-only, matching the design where a GM's
- * uploaded signature requires admin approval before it's live (see
- * SignatureRequests in the hierarchy migration) - an employee/GM reviewing
- * their OWN pending signature request would be a different, simpler
- * "my signature" screen under Profile, not this admin approval queue.
+ * Audit Logs is admin-only (per the confirmed requirement) - same
+ * isAdmin gate already used for Signatures.
  */
 export default function StaffDrawer() {
   const role = useSelector(selectUserRole);
@@ -49,11 +40,9 @@ export default function StaffDrawer() {
     >
       <Drawer.Screen
         name="Approvals"
-        component={ApprovalsScreen}
+        component={DocumentApprovalsStack}
         options={{
-          drawerIcon: ({ color, size }) => (
-            <Icon name="clipboard-check-outline" color={color} size={size} />
-          ),
+          drawerIcon: ({ color, size }) => <Icon name="clipboard-check-outline" color={color} size={size} />,
         }}
       />
       <Drawer.Screen
@@ -61,46 +50,21 @@ export default function StaffDrawer() {
         component={TeamAttendanceScreen}
         options={{
           title: 'Team Attendance',
-          drawerIcon: ({ color, size }) => (
-            <Icon name="account-group-outline" color={color} size={size} />
-          ),
+          drawerIcon: ({ color, size }) => <Icon name="account-group-outline" color={color} size={size} />,
         }}
       />
       <Drawer.Screen
         name="Tasks"
-        component={TasksScreen}
+        component={TasksOverviewScreen}
         options={{
-          drawerIcon: ({ color, size }) => (
-            <Icon name="checkbox-marked-circle-outline" color={color} size={size} />
-          ),
+          drawerIcon: ({ color, size }) => <Icon name="checkbox-marked-circle-outline" color={color} size={size} />,
         }}
       />
       <Drawer.Screen
         name="Interns"
         component={InternsScreen}
         options={{
-          drawerIcon: ({ color, size }) => (
-            <Icon name="account-multiple-outline" color={color} size={size} />
-          ),
-        }}
-      />
-      <Drawer.Screen
-        name="GatePasses"
-        component={GatePassesScreen}
-        options={{
-          title: 'Gate Passes',
-          drawerIcon: ({ color, size }) => (
-            <Icon name="card-account-details-star-outline" color={color} size={size} />
-          ),
-        }}
-      />
-      <Drawer.Screen
-        name="Letters"
-        component={LettersScreen}
-        options={{
-          drawerIcon: ({ color, size }) => (
-            <Icon name="file-document-multiple-outline" color={color} size={size} />
-          ),
+          drawerIcon: ({ color, size }) => <Icon name="account-multiple-outline" color={color} size={size} />,
         }}
       />
       {isAdmin && (
@@ -113,13 +77,21 @@ export default function StaffDrawer() {
           }}
         />
       )}
+      {isAdmin && (
+        <Drawer.Screen
+          name="AuditLogs"
+          component={AuditLogsScreen}
+          options={{
+            title: 'Audit Logs',
+            drawerIcon: ({ color, size }) => <Icon name="history" color={color} size={size} />,
+          }}
+        />
+      )}
       <Drawer.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
-          drawerIcon: ({ color, size }) => (
-            <Icon name="account-circle-outline" color={color} size={size} />
-          ),
+          drawerIcon: ({ color, size }) => <Icon name="account-circle-outline" color={color} size={size} />,
         }}
       />
     </Drawer.Navigator>

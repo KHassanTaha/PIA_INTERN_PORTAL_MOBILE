@@ -71,7 +71,21 @@ export const piaTheme = {
     secondaryContainer: PIAColors.goldLight,
     onSecondaryContainer: PIAColors.greenDark,
     background: PIAColors.offWhite,
+    onBackground: PIAColors.ink,
     surface: PIAColors.white,
+    onSurface: PIAColors.ink,
+    // These four were previously left at MD3's stock defaults (a
+    // Google-purple palette) rather than PIA colors - harmless while
+    // nothing read them directly, but DataTable (and any future Paper
+    // component relying on these roles - Searchbar, Menu, dividers)
+    // does read them via useTheme(), so leaving them unset meant those
+    // pieces would silently look off-brand. Values chosen as muted,
+    // ink-based neutrals so they read as "secondary text/border", not
+    // as a competing accent color.
+    surfaceVariant: PIAColors.offWhite,
+    onSurfaceVariant: PIAColors.ink + '99',
+    outline: PIAColors.ink + '55',
+    outlineVariant: PIAColors.ink + '22',
     error: PIAColors.error,
   },
   fonts: configureFonts({ config: fontConfig }),

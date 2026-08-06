@@ -14,7 +14,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import RootNavigator from './src/navigation/RootNavigator';
 import { persistor, store } from './src/store/store';
 import { piaTheme } from './src/theme/theme';
-import { useSyncQueue } from './src/services/syncQueue';
+import { useSyncQueue } from './src/services/SyncQueue';
 import { useNotificationPolling } from './src/hooks/UseNotificationPolling';
 
 function AppShell() {

@@ -12,19 +12,25 @@ import {
 } from 'redux-persist';
 
 import attendanceReducer from './slices/attendanceSlice';
-import documentRequestsReducer from './slices/documentRequestsSlice';
-import documentUploadsReducer from './slices/documentUploadsSlice';
 import authReducer from './slices/authSlice';
 import tasksReducer from './slices/tasksSlice';
 import notificationsReducer from './slices/notificationsSlice';
+import documentsReducer from './slices/documentsSlice';
+import documentsAdminReducer from './slices/documentsAdminSlice';
+import staffDataReducer from './slices/staffDataSlice';
+
+// documentRequestsSlice / documentUploadsSlice are SUPERSEDED by
+// documentsSlice (see that file's header comment) - remove those two
+// files and their imports if they still exist in the project.
 
 const rootReducer = combineReducers({
   attendance: attendanceReducer,
-  documentRequests: documentRequestsReducer,
-  documentUploads: documentUploadsReducer,
   auth: authReducer,
   tasks: tasksReducer,
   notifications: notificationsReducer,
+  documents: documentsReducer,
+  documentsAdmin: documentsAdminReducer,
+  staffData: staffDataReducer,
 });
 
 // Per project decision: no separate local database (no SQLite) for this
@@ -43,6 +49,22 @@ const rootReducer = combineReducers({
 // short-lived, and revocable server-side); EncryptedStorage is used for
 // the belt-and-suspenders case of restoring a session before Redux
 // Persist has rehydrated. Worth revisiting if that turns out redundant.
+
+
+// Per project decision: no separate local database (no SQLite) for this
+// build — all offline data, including full history, lives in this
+// persisted Redux store, backed by AsyncStorage. Worth knowing for later:
+// Redux Persist re-serializes its whole persisted state on every write, so
+// if any slice's history grows very large over time, that write can start
+// to feel slow — not a concern at this project's scale, just worth
+// watching if attendance/document history grows into the thousands of
+// records per device.
+//
+// staffData is read-heavy mock/admin data, not offline-first user input
+// like the other slices — persisting it is harmless (it just re-fetches
+// and overwrites on next screen visit) but not load-bearing either way.
+
+
 const persistConfig = {
   key: 'pia-intern-portal-root',
   version: 1,

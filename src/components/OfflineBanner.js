@@ -6,18 +6,15 @@ import { useSelector } from 'react-redux';
 export function OfflineBanner() {
   const [isOffline, setIsOffline] = useState(false);
 
-  const pendingCount = useSelector((s) => {
-    const pendingAttendance = s.attendance.records.filter(
-      (r) => r.syncStatus === 'pending',
-    ).length;
-    const pendingRequests = s.documentRequests.requests.filter(
-      (r) => r.syncStatus === 'pending',
-    ).length;
-    const pendingUploads = s.documentUploads.uploads.filter(
-      (u) => u.syncStatus === 'pending',
-    ).length;
-    return pendingAttendance + pendingRequests + pendingUploads;
-  });
+  // Only attendance uses the write-locally-then-sync (offline queue)
+  // pattern right now. documentsSlice moved to a thunk/actionStatus model
+  // (see documentsSlice.js header) — actionStatus tracks an in-flight API
+  // call, not a queued-for-later-sync item, so it deliberately isn't
+  // counted here. If document offline queuing gets built later, add it
+  // back the same way attendance is counted below.
+  const pendingCount = useSelector(
+    (s) => s.attendance.records.filter((r) => r.syncStatus === 'pending').length,
+  );
 
   useEffect(() => {
     return NetInfo.addEventListener((state) => {

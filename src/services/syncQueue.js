@@ -6,31 +6,28 @@ import {
   markAttendanceFailed,
   markAttendanceSynced,
 } from '../store/slices/attendanceSlice';
-import {
-  markDocumentRequestFailed,
-  markDocumentRequestSynced,
-} from '../store/slices/documentRequestsSlice';
-import {
-  markUploadFailed,
-  markUploadSynced,
-} from '../store/slices/documentUploadsSlice';
-import {
-  syncAttendanceRecord,
-  syncDocumentRequest,
-  syncDocumentUpload,
-} from './api';
+import { syncAttendanceRecord } from './api';
 
 /**
  * Write-locally-then-sync engine. Anything queued with syncStatus:'pending'
  * gets pushed to the backend as soon as the device is online — on mount,
  * and again on every connectivity change. Mount this once near the app
  * root (see App.js); it doesn't render anything.
+ *
+ * Document uploads/requests were REMOVED from this queue (previously
+ * imported from a documentSlice.js that no longer matches the current
+ * documents architecture) — documentsSlice.js (plural, current) uses
+ * direct async thunks against a mock service instead of an offline
+ * syncStatus queue. This is a real open decision, not an oversight:
+ * worth revisiting whether documents should get offline-queue support
+ * added back once real endpoints exist, matching attendance's pattern -
+ * see the project notes on this exact question. For now, document
+ * submission simply requires connectivity (which is a non-issue while
+ * everything is mock data anyway).
  */
 export function useSyncQueue() {
   const dispatch = useDispatch();
   const attendanceRecords = useSelector((s) => s.attendance.records);
-  const documentRequests = useSelector((s) => s.documentRequests.requests);
-  const documentUploads = useSelector((s) => s.documentUploads.uploads);
   const isFlushing = useRef(false);
 
   useEffect(() => {
@@ -50,30 +47,6 @@ export function useSyncQueue() {
             dispatch(markAttendanceFailed(record.id));
           }
         }
-
-        const pendingRequests = documentRequests.filter(
-          (r) => r.syncStatus === 'pending',
-        );
-        for (const request of pendingRequests) {
-          try {
-            await syncDocumentRequest(request);
-            dispatch(markDocumentRequestSynced(request.id));
-          } catch {
-            dispatch(markDocumentRequestFailed(request.id));
-          }
-        }
-
-        const pendingUploads = documentUploads.filter(
-          (u) => u.syncStatus === 'pending',
-        );
-        for (const upload of pendingUploads) {
-          try {
-            await syncDocumentUpload(upload);
-            dispatch(markUploadSynced(upload.id));
-          } catch {
-            dispatch(markUploadFailed(upload.id));
-          }
-        }
       } finally {
         isFlushing.current = false;
       }
@@ -89,5 +62,5 @@ export function useSyncQueue() {
 
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attendanceRecords, documentRequests, documentUploads]);
+  }, [attendanceRecords]);
 }

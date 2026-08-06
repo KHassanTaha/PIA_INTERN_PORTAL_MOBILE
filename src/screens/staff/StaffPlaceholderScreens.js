@@ -1,43 +1,17 @@
 /**
  * screens/staff/StaffPlaceholderScreens.js
  *
- * Thin wrappers around ComingSoonScreen for each staff drawer
- * destination that doesn't have a real implementation yet. Kept in one
- * file rather than one file each, since each is currently a single line
- * of actual content — split any of these into their own file the moment
- * real functionality gets built into it.
+ * Down to just ProfileScreen now — TeamAttendance, Tasks, Interns, and
+ * Signatures all graduated to real DataTable-backed screens (see
+ * screens/staff/TeamAttendanceScreen.js, TasksOverviewScreen.js,
+ * InternsScreen.js, SignaturesScreen.js). Profile is the piece spec'd
+ * out for the other agent to build (staff profile + GM signature
+ * upload) — replace this export once that work lands, same pattern as
+ * the others.
  */
 
 import React from 'react';
 import ComingSoonScreen from '../../components/ComingSoonScreen';
-
-export function ApprovalsScreen() {
-  return <ComingSoonScreen title="Approvals" icon="clipboard-check-outline" />;
-}
-
-export function TeamAttendanceScreen() {
-  return <ComingSoonScreen title="Team Attendance" icon="account-group-outline" />;
-}
-
-export function TasksScreen() {
-  return <ComingSoonScreen title="Tasks" icon="checkbox-marked-circle-outline" />;
-}
-
-export function InternsScreen() {
-  return <ComingSoonScreen title="Interns" icon="account-multiple-outline" />;
-}
-
-export function GatePassesScreen() {
-  return <ComingSoonScreen title="Gate Passes" icon="card-account-details-star-outline" />;
-}
-
-export function LettersScreen() {
-  return <ComingSoonScreen title="Letters" icon="file-document-multiple-outline" />;
-}
-
-export function SignaturesScreen() {
-  return <ComingSoonScreen title="Signature Requests" icon="draw-pen" />;
-}
 
 export function ProfileScreen() {
   return <ComingSoonScreen title="Profile" icon="account-circle-outline" />;
