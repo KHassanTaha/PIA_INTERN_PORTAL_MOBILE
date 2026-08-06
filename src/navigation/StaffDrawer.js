@@ -13,6 +13,7 @@ import AuditLogsScreen from '../screens/staff/AuditLogsScreen';
 import { ProfileScreen } from '../screens/staff/StaffPlaceholderScreens';
 import { selectUserRole } from '../store/slices/authSlice';
 import { piaTheme } from '../theme/theme';
+import InternsStack from './InternsStack'; // replaces the direct InternsScreen import
 
 const Drawer = createDrawerNavigator();
 
@@ -62,7 +63,7 @@ export default function StaffDrawer() {
       />
       <Drawer.Screen
         name="Interns"
-        component={InternsScreen}
+        component={InternsStack}
         options={{
           drawerIcon: ({ color, size }) => <Icon name="account-multiple-outline" color={color} size={size} />,
         }}

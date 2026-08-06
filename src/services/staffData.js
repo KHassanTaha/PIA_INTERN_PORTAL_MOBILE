@@ -69,3 +69,26 @@ export async function getAuditLogs() {
   await delay(MOCK_DELAY_MS);
   return [...mockAuditLogs].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 }
+
+const SIMULATED_LATENCY_MS = 900;
+let nextMockId = 1000; // clear of the seeded mockInterns ids (1–6)
+
+export async function createIntern(payload) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const newIntern = {
+        id: nextMockId++,
+        name: payload.fullName,
+        // Mock store's existing shape (see mockStaffDataStore.js) holds
+        // display strings, not ids — real backend integration will drop
+        // this resolution step entirely once InternsScreen reads
+        // department/mentor names the server already resolved.
+        department: payload.departmentLabel || 'Unknown',
+        mentor: payload.mentorLabel || 'Unknown',
+        startDate: payload.startDate,
+        status: 'Active',
+      };
+      resolve(newIntern);
+    }, SIMULATED_LATENCY_MS);
+  });
+}

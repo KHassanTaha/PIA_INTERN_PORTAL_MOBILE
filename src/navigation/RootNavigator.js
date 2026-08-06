@@ -21,7 +21,7 @@ import { selectIsAuthenticated, selectUserRole } from '../store/slices/authSlice
  */
 export default function RootNavigator() {
   const isAuthenticated = true;
-  const role = 'interns';
+  const role = 'admin';
   /**
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const role = useSelector(selectUserRole);

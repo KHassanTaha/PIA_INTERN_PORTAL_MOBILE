@@ -50,6 +50,7 @@ export default function InternsScreen() {
       <GradientHeader gradient={PIAGradients.primaryDark}>
         <Appbar.Action icon="menu" color={PIAColors.white} onPress={() => navigation.openDrawer()} />
         <Appbar.Content title="Interns" titleStyle={styles.headerTitle} />
+        <Appbar.Action icon="plus" color={PIAColors.white} onPress={() => navigation.navigate('AddIntern')} />
       </GradientHeader>
 
       <DataTable

@@ -6,7 +6,9 @@ import {
   getSignatureRequests,
   getStaffTasks,
   getTeamAttendance,
+  createIntern,
 } from '../../services/staffData';
+
 
 // One thunk per domain rather than one combined "fetch everything" thunk
 // - each table screen only fetches its own slice of data when it mounts,
@@ -26,6 +28,17 @@ export const fetchTeamAttendanceThunk = createAsyncThunk('staffData/fetchAttenda
     return rejectWithValue(err.message);
   }
 });
+
+export const createInternThunk = createAsyncThunk(
+  'staffData/createIntern',
+  async (payload, { rejectWithValue }) => {
+    try {
+      return await createIntern(payload);
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
 
 export const fetchStaffTasksThunk = createAsyncThunk('staffData/fetchTasks', async (_, { rejectWithValue }) => {
   try {
@@ -100,6 +113,11 @@ const staffDataSlice = createSlice({
     builder.addCase(decideSignatureRequestThunk.fulfilled, (state, action) => {
       // A decided signature request leaves the pending queue.
       state.signatures.items = state.signatures.items.filter((r) => r.id !== action.payload.id);
+    });
+
+    builder.addCase(createInternThunk.fulfilled, (state, action) => {
+      // Add the newly created intern to the interns list.
+      state.interns.items.push(action.payload);
     });
   },
 });
